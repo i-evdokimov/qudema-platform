@@ -1,24 +1,41 @@
 const Sequelize = require('sequelize');
-const config = require('../config/database'); // Убедись, что путь верный
+const config = require('../config/database'); // Просто для порядка, но логику пропишем тут явно
 
-// Создаем подключение
-const sequelize = new Sequelize(
-  process.env.DB_NAME,
-  process.env.DB_USER,
-  process.env.DB_PASSWORD,
-  {
-    host: process.env.DB_HOST,
+let sequelize;
+
+// ТА ЖЕ ЛОГИКА: Сначала проверяем DATABASE_URL от Render
+if (process.env.DATABASE_URL) {
+  sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
-    port: process.env.DB_PORT || 5432,
-    logging: false,
+    protocol: 'postgres',
     dialectOptions: {
       ssl: {
         require: true,
-        rejectUnauthorized: false // Важно для Render!
+        rejectUnauthorized: false
+      }
+    },
+    logging: false
+  });
+} else {
+  // Локальная разработка
+  sequelize = new Sequelize(
+    process.env.DB_NAME,
+    process.env.DB_USER,
+    process.env.DB_PASSWORD,
+    {
+      host: process.env.DB_HOST,
+      dialect: 'postgres',
+      port: process.env.DB_PORT || 5432,
+      logging: false,
+      dialectOptions: {
+        ssl: {
+            require: true,
+            rejectUnauthorized: false
+        }
       }
     }
-  }
-);
+  );
+}
 
 const db = {};
 
