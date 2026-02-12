@@ -41,8 +41,8 @@ const startServer = async () => {
     // 2. Синхронизация с базой (СБРОС ТАБЛИЦ для лечения ошибки 500)
     // Внимание: force: true удаляет старые данные!
     console.log('⏳ Синхронизация таблиц...');
-    await sequelize.sync({ force: true }); 
-    console.log('✅ Таблицы успешно пересозданы (Force Sync)');
+    await sequelize.sync({ alter: true }); // alter обновляет структуру, не удаляя данные
+    console.log('✅ Таблицы синхронизированы');
 
     // 3. Запуск прослушивания порта (ТОЛЬКО ОДИН РАЗ!)
     app.listen(PORT, () => {
