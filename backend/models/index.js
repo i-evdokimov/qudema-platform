@@ -1,63 +1,31 @@
-const { sequelize } = require('../config/database');
-const User = require('./User');
-const Course = require('./Course');
-const Lesson = require('./Lesson');
-const Enrollment = require('./Enrollment');
+const Sequelize = require('sequelize');
+const config = require('../config/database'); // Убедись, что путь верный
 
-// Определение связей между моделями
+// Создаем подключение
+const sequelize = new Sequelize(
+  process.env.DB_NAME,
+  process.env.DB_USER,
+  process.env.DB_PASSWORD,
+  {
+    host: process.env.DB_HOST,
+    dialect: 'postgres',
+    port: process.env.DB_PORT || 5432,
+    logging: false,
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false // Важно для Render!
+      }
+    }
+  }
+);
 
-// User <-> Course (многие ко многим через Enrollment)
-User.belongsToMany(Course, { 
-  through: Enrollment, 
-  foreignKey: 'userId',
-  as: 'enrolledCourses'
-});
+const db = {};
 
-Course.belongsToMany(User, { 
-  through: Enrollment, 
-  foreignKey: 'courseId',
-  as: 'enrolledStudents'
-});
+db.Sequelize = Sequelize;
+db.sequelize = sequelize;
 
-// Course -> Lesson (один ко многим)
-Course.hasMany(Lesson, {
-  foreignKey: 'courseId',
-  as: 'lessons',
-  onDelete: 'CASCADE'
-});
+// Подключаем модель пользователя
+db.User = require('./User')(sequelize, Sequelize);
 
-Lesson.belongsTo(Course, {
-  foreignKey: 'courseId',
-  as: 'course'
-});
-
-// User -> Enrollment
-User.hasMany(Enrollment, {
-  foreignKey: 'userId',
-  as: 'enrollments'
-});
-
-Enrollment.belongsTo(User, {
-  foreignKey: 'userId',
-  as: 'student'
-});
-
-// Course -> Enrollment
-Course.hasMany(Enrollment, {
-  foreignKey: 'courseId',
-  as: 'enrollments'
-});
-
-Enrollment.belongsTo(Course, {
-  foreignKey: 'courseId',
-  as: 'course'
-});
-
-// Экспорт всех моделей
-module.exports = {
-  sequelize,
-  User,
-  Course,
-  Lesson,
-  Enrollment
-};
+module.exports = db;

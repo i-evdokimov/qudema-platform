@@ -1,25 +1,30 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
-const sequelize = new Sequelize(process.env.DATABASE_URL, {
-  dialect: 'postgres',
-  logging: process.env.NODE_ENV === 'development' ? console.log : false,
-  pool: {
-    max: 5,
-    min: 0,
-    acquire: 30000,
-    idle: 10000
+const sequelize = new Sequelize(
+  process.env.DB_NAME,
+  process.env.DB_USER,
+  process.env.DB_PASSWORD,
+  {
+    host: process.env.DB_HOST,
+    dialect: 'postgres',
+    port: process.env.DB_PORT || 5432,
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    },
+    logging: false
   }
-});
+);
 
-// Тест соединения
 const testConnection = async () => {
   try {
     await sequelize.authenticate();
     console.log('✅ База данных подключена успешно');
   } catch (error) {
-    console.error('❌ Ошибка подключения к БД:', error.message);
-    process.exit(1);
+    console.error('❌ Ошибка подключения к БД:', error);
   }
 };
 
