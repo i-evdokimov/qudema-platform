@@ -68,17 +68,16 @@ const startServer = async () => {
     // Подключение к БД
     await testConnection();
     
-    // Синхронизация моделей с БД (только для разработки)
-    if (process.env.NODE_ENV === 'development') {
-      await sequelize.sync({ alter: true });
-      console.log('✅ Модели синхронизированы с БД');
-    }
+    // Синхронизация моделей с БД
+    // Мы убрали проверку process.env.NODE_ENV, чтобы это работало и на Render
+    console.log('⏳ Синхронизация моделей с базой данных...');
+    await sequelize.sync({ alter: true });
+    console.log('✅ Модели успешно синхронизированы (таблицы проверены/созданы)');
 
     // Запуск сервера
     app.listen(PORT, () => {
       console.log(`🚀 Сервер запущен на порту ${PORT}`);
-      console.log(`📡 Режим: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`🌐 http://localhost:${PORT}`);
+      console.log(`📡 Режим: ${process.env.NODE_ENV || 'production'}`);
     });
   } catch (error) {
     console.error('❌ Ошибка запуска сервера:', error);
