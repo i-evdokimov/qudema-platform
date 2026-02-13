@@ -1,82 +1,28 @@
-const { DataTypes } = require('sequelize');
-const { sequelize } = require('../config/database');
+const mongoose = require('mongoose');
 
-const Enrollment = sequelize.define('Enrollment', {
-  id: {
-    type: DataTypes.UUID,
-    defaultValue: DataTypes.UUIDV4,
-    primaryKey: true
-  },
-  userId: {
-    type: DataTypes.UUID,
-    allowNull: false,
-    field: 'user_id',
-    references: {
-      model: 'users',
-      key: 'id'
-    },
-    onDelete: 'CASCADE'
+const EnrollmentSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   },
   courseId: {
-    type: DataTypes.UUID,
-    allowNull: false,
-    field: 'course_id',
-    references: {
-      model: 'courses',
-      key: 'id'
-    },
-    onDelete: 'CASCADE'
+    type: String, // ID курса, например "phys-oge-8-9"
+    required: true
   },
   status: {
-    type: DataTypes.ENUM('active', 'completed', 'expired', 'cancelled'),
-    defaultValue: 'active'
+    type: String,
+    enum: ['active', 'completed', 'dropped'],
+    default: 'active'
   },
   progress: {
-    type: DataTypes.INTEGER,
-    defaultValue: 0,
-    validate: {
-      min: 0,
-      max: 100
-    },
-    comment: 'Прогресс прохождения курса в процентах'
-  },
-  completedLessons: {
-    type: DataTypes.JSONB,
-    defaultValue: [],
-    field: 'completed_lessons',
-    comment: 'Массив ID завершенных уроков'
+    type: Number,
+    default: 0
   },
   enrolledAt: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
-    field: 'enrolled_at'
-  },
-  expiresAt: {
-    type: DataTypes.DATE,
-    allowNull: true,
-    field: 'expires_at',
-    comment: 'Дата окончания доступа к курсу'
-  },
-  completedAt: {
-    type: DataTypes.DATE,
-    allowNull: true,
-    field: 'completed_at'
-  },
-  certificateIssued: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: false,
-    field: 'certificate_issued'
+    type: Date,
+    default: Date.now
   }
-}, {
-  tableName: 'enrollments',
-  timestamps: true,
-  underscored: true,
-  indexes: [
-    {
-      unique: true,
-      fields: ['user_id', 'course_id']
-    }
-  ]
 });
 
-module.exports = Enrollment;
+module.exports = mongoose.model('Enrollment', EnrollmentSchema);

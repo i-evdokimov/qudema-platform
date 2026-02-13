@@ -1,59 +1,28 @@
 const express = require('express');
 const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
+const mongoose = require('mongoose');
 require('dotenv').config();
 
-const { testConnection } = require('./config/database');
-const { sequelize } = require('./models');
-
-// Инициализация Express
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(helmet()); 
-app.use(cors()); 
-app.use(express.json()); 
-app.use(express.urlencoded({ extended: true })); 
-app.use(morgan('dev')); 
+app.use(cors());
+app.use(express.json());
 
-// Маршруты
+// --- ПОДКЛЮЧЕНИЕ К MONGODB (Убираем старый Sequelize/SQL) ---
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('✅ MongoDB Connected'))
+  .catch(err => console.error('❌ MongoDB Connection Error:', err));
+
+// --- РОУТЫ ---
 app.use('/api/auth', require('./routes/auth'));
-// Если у тебя есть routes/courses, раскомментируй следующую строку:
-// app.use('/api/courses', require('./routes/courses'));
+app.use('/api/enrollments', require('./routes/enrollments'));
+app.use('/api/courses', require('./routes/courseRoutes'));
 
-// Корневой маршрут (для проверки жизни сервера)
+// Тестовый роут
 app.get('/', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Qudema API is running',
-    version: '1.0.0'
-  });
+  res.send('API is running...');
 });
 
-// ЕДИНСТВЕННАЯ функция запуска сервера
-const startServer = async () => {
-  try {
-    // 1. Проверяем подключение
-    await testConnection();
-    
-    // 2. Синхронизация с базой (СБРОС ТАБЛИЦ для лечения ошибки 500)
-    // Внимание: force: true удаляет старые данные!
-    console.log('⏳ Синхронизация таблиц...');
-    await sequelize.sync({ alter: true }); // alter обновляет структуру, не удаляя данные
-    console.log('✅ Таблицы синхронизированы');
-
-    // 3. Запуск прослушивания порта (ТОЛЬКО ОДИН РАЗ!)
-    app.listen(PORT, () => {
-      console.log(`🚀 Сервер запущен на порту ${PORT}`);
-    });
-
-  } catch (error) {
-    console.error('❌ Критическая ошибка запуска:', error);
-    process.exit(1); // Завершаем процесс при ошибке
-  }
-};
-
-// Запускаем
-startServer();
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

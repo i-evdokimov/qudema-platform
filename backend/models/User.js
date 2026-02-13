@@ -1,27 +1,45 @@
-module.exports = (sequelize, DataTypes) => {
-  const User = sequelize.define("User", {
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false, // Имя обязательно
-    },
-    email: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true, // Email должен быть уникальным
-      validate: {
-        isEmail: true, // Проверка формата email
-      },
-    },
-    password: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    role: {
-      type: DataTypes.STRING,
-      defaultValue: 'student',
-      allowNull: false
-    }
-  });
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
-  return User;
+const UserSchema = new mongoose.Schema({
+  username: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  password: {
+    type: String,
+    required: true
+  },
+  role: {
+    type: String,
+    enum: ['student', 'admin'],
+    default: 'student'
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+// Хеширование пароля перед сохранением
+UserSchema.pre('save', async function(next) {
+  if (!this.isModified('password')) {
+    return next();
+  }
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
+});
+
+// Метод сверки паролей
+UserSchema.methods.matchPassword = async function(enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
 };
+
+module.exports = mongoose.model('User', UserSchema);

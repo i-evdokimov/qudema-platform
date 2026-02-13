@@ -1,74 +1,39 @@
-const { DataTypes } = require('sequelize');
-const { sequelize } = require('../config/database');
+const mongoose = require('mongoose');
 
-const Course = sequelize.define('Course', {
-  id: {
-    type: DataTypes.UUID,
-    defaultValue: DataTypes.UUIDV4,
-    primaryKey: true
+const CourseSchema = new mongoose.Schema({
+  courseId: {
+    type: String,
+    required: true,
+    unique: true // Например: "phys-oge-8-9"
   },
   title: {
-    type: DataTypes.STRING,
-    allowNull: false
+    type: String,
+    required: true
   },
   description: {
-    type: DataTypes.TEXT,
-    allowNull: true
-  },
-  subject: {
-    type: DataTypes.ENUM('математика', 'русский', 'физика', 'химия', 'биология', 'информатика', 'английский', 'обществознание', 'история', 'литература', 'география'),
-    allowNull: false
-  },
-  examType: {
-    type: DataTypes.ENUM('ЕГЭ', 'ОГЭ', 'ВПР'),
-    allowNull: false,
-    field: 'exam_type'
-  },
-  grade: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    comment: 'Класс (9 или 11)'
+    type: String
   },
   price: {
-    type: DataTypes.DECIMAL(10, 2),
-    allowNull: false,
-    defaultValue: 0
-  },
-  thumbnail: {
-    type: DataTypes.STRING,
-    allowNull: true
-  },
-  duration: {
-    type: DataTypes.INTEGER,
-    allowNull: true,
-    comment: 'Продолжительность курса в часах'
+    type: String
   },
   level: {
-    type: DataTypes.ENUM('beginner', 'intermediate', 'advanced'),
-    defaultValue: 'beginner'
+    type: String
   },
-  isPublished: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: false,
-    field: 'is_published'
+  duration: {
+    type: String
   },
-  enrollmentCount: {
-    type: DataTypes.INTEGER,
-    defaultValue: 0,
-    field: 'enrollment_count'
-  },
-  rating: {
-    type: DataTypes.DECIMAL(2, 1),
-    defaultValue: 0,
-    validate: {
-      min: 0,
-      max: 5
+  // Список уроков
+  modules: [
+    {
+      title: { type: String },
+      content: { type: String }, // Ссылка на видео или текст
+      type: { type: String, default: 'video' } // video / text / quiz
     }
+  ],
+  createdAt: {
+    type: Date,
+    default: Date.now
   }
-}, {
-  tableName: 'courses',
-  timestamps: true,
-  underscored: true
 });
 
-module.exports = Course;
+module.exports = mongoose.model('Course', CourseSchema);
